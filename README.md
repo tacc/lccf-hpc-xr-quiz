@@ -36,7 +36,7 @@ cd lccf-hpc-xr-quiz
 ### 2. Open in Unity
 - Open Unity Hub and select Add project from disk.
 - Navigate to the cloned `lccf-hpc-xr-quiz` folder and open it.
-- Open `SampleScene.unity` located in the `Assets/` folder.
+- Open `SuperCityQuiz.unity` located in the `Assets/` folder.
 
 ### 3. Running the App
 - Ensure your zSpace tracking services are running (IR lights on the bezel should be active).
