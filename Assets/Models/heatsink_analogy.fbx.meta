@@ -13,7 +13,7 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: 0
-    second: {fileID: 2800000, guid: 6c999b2d99cf2c44fb2fa6f551f8fecd, type: 3}
+    second: {fileID: 2800000, guid: e89b1df13d1e8b44f896331c8a93bca2, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
