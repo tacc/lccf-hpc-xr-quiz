@@ -6,12 +6,20 @@ public class SuperCityManager : MonoBehaviour
     [Header("Game State")]
     public int currentPhase = 0;
 
+    [Header("Intro Layer")]
+    public GameObject introLayer;
+    public float introDuration = 15f;
+
     [Header("City Layer")]
+    public GameObject cityLayer;
     public GameObject[] cityAnalogies;
 
     [Header("Placement Layer")]
     public GameObject motherboardBase;
     public GameObject[] hardwareModels;
+
+    [Header("Temporary Placement Timer")]
+    public float placementDuration = 3f;
 
     [Header("Audio")]
     public AudioSource explanationAudioSource;
@@ -34,14 +42,113 @@ public class SuperCityManager : MonoBehaviour
         }
 
         HideAll();
-        StartAnalogyPhase(0);
+
+        StartCoroutine(PlayIntroThenStartSceneOne());
     }
 
     private void HideAll()
     {
+        if (introLayer != null)
+        {
+            introLayer.SetActive(false);
+        }
+
+        if (cityLayer != null)
+        {
+            cityLayer.SetActive(false);
+        }
+
         if (motherboardBase != null)
         {
             motherboardBase.SetActive(false);
+        }
+
+        if (cityAnalogies != null)
+        {
+            foreach (var analogy in cityAnalogies)
+            {
+                if (analogy != null)
+                {
+                    analogy.SetActive(false);
+                }
+            }
+        }
+
+        if (hardwareModels != null)
+        {
+            foreach (var model in hardwareModels)
+            {
+                if (model != null)
+                {
+                    model.SetActive(false);
+                }
+            }
+        }
+    }
+
+    private IEnumerator PlayIntroThenStartSceneOne()
+    {
+        Debug.Log("Intro started.");
+
+        if (introLayer != null)
+        {
+            introLayer.SetActive(true);
+        }
+
+        yield return new WaitForSeconds(introDuration);
+
+        if (introLayer != null)
+        {
+            introLayer.SetActive(false);
+        }
+
+        if (cityLayer != null)
+        {
+            cityLayer.SetActive(true);
+        }
+
+        Debug.Log("Intro finished. Starting first analogy.");
+
+        StartAnalogyPhase(0);
+    }
+
+    public void StartAnalogyPhase(int phaseIndex)
+    {
+        if (cityAnalogies == null || phaseIndex < 0 || phaseIndex >= cityAnalogies.Length)
+        {
+            Debug.LogWarning("Invalid city analogy phase: " + phaseIndex);
+            return;
+        }
+
+        currentPhase = phaseIndex;
+        phaseTransitionRunning = false;
+
+        if (cityLayer != null)
+        {
+            cityLayer.SetActive(true);
+        }
+
+        if (motherboardBase != null)
+        {
+            motherboardBase.SetActive(false);
+        }
+
+        HideAllCityAnalogies();
+        HideAllHardwareModels();
+
+        if (cityAnalogies[currentPhase] != null)
+        {
+            cityAnalogies[currentPhase].SetActive(true);
+        }
+
+        Debug.Log("Starting analogy phase " + currentPhase);
+    }
+
+    private void HideAllCityAnalogies()
+    {
+        if (cityAnalogies == null)
+        {
+            return;
         }
 
         foreach (var analogy in cityAnalogies)
@@ -51,6 +158,14 @@ public class SuperCityManager : MonoBehaviour
                 analogy.SetActive(false);
             }
         }
+    }
+
+    private void HideAllHardwareModels()
+    {
+        if (hardwareModels == null)
+        {
+            return;
+        }
 
         foreach (var model in hardwareModels)
         {
@@ -58,17 +173,6 @@ public class SuperCityManager : MonoBehaviour
             {
                 model.SetActive(false);
             }
-        }
-    }
-
-    public void StartAnalogyPhase(int phaseIndex)
-    {
-        currentPhase = phaseIndex;
-        phaseTransitionRunning = false;
-
-        if (cityAnalogies[currentPhase] != null)
-        {
-            cityAnalogies[currentPhase].SetActive(true);
         }
     }
 
@@ -92,6 +196,7 @@ public class SuperCityManager : MonoBehaviour
 
         if (explanationAudioSource != null &&
             explanationClips != null &&
+            currentPhase >= 0 &&
             currentPhase < explanationClips.Length &&
             explanationClips[currentPhase] != null)
         {
@@ -103,7 +208,10 @@ public class SuperCityManager : MonoBehaviour
 
         yield return new WaitForSeconds(pauseAfterAudio);
 
-        if (cityAnalogies[currentPhase] != null)
+        if (cityAnalogies != null &&
+            currentPhase >= 0 &&
+            currentPhase < cityAnalogies.Length &&
+            cityAnalogies[currentPhase] != null)
         {
             cityAnalogies[currentPhase].SetActive(false);
         }
@@ -118,12 +226,19 @@ public class SuperCityManager : MonoBehaviour
             yield return StartCoroutine(SlideMotherboard(startPosition, motherboardFinalPosition));
         }
 
-        if (hardwareModels[currentPhase] != null)
+        if (hardwareModels != null &&
+            currentPhase >= 0 &&
+            currentPhase < hardwareModels.Length &&
+            hardwareModels[currentPhase] != null)
         {
             hardwareModels[currentPhase].SetActive(true);
         }
 
-        phaseTransitionRunning = false;
+        Debug.Log("Temporary placement layer running for " + placementDuration + " seconds.");
+
+        yield return new WaitForSeconds(placementDuration);
+
+        OnHardwarePlaced();
     }
 
     private IEnumerator SlideMotherboard(Vector3 startPosition, Vector3 endPosition)
@@ -137,22 +252,46 @@ public class SuperCityManager : MonoBehaviour
             float t = elapsedTime / motherboardSlideDuration;
             t = Mathf.SmoothStep(0f, 1f, t);
 
-            motherboardBase.transform.position = Vector3.Lerp(startPosition, endPosition, t);
+            if (motherboardBase != null)
+            {
+                motherboardBase.transform.position = Vector3.Lerp(startPosition, endPosition, t);
+            }
 
             yield return null;
         }
 
-        motherboardBase.transform.position = endPosition;
+        if (motherboardBase != null)
+        {
+            motherboardBase.transform.position = endPosition;
+        }
     }
 
     public void OnHardwarePlaced()
     {
-        Debug.Log("Hardware placed correctly for phase " + currentPhase);
+        Debug.Log("Hardware placed correctly or timer finished for phase " + currentPhase);
 
-        // add next phases here:
-        // currentPhase++;
-        // StartAnalogyPhase(currentPhase);
+        if (hardwareModels != null &&
+            currentPhase >= 0 &&
+            currentPhase < hardwareModels.Length &&
+            hardwareModels[currentPhase] != null)
+        {
+            hardwareModels[currentPhase].SetActive(false);
+        }
+
+        if (motherboardBase != null)
+        {
+            motherboardBase.SetActive(false);
+        }
+
+        currentPhase++;
+
+        if (cityAnalogies != null && currentPhase < cityAnalogies.Length)
+        {
+            StartAnalogyPhase(currentPhase);
+        }
+        else
+        {
+            Debug.Log("All phases completed.");
+        }
     }
 }
-
-

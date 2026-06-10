@@ -10,6 +10,9 @@ public class ZDraggableItem :
     [Header("Answer Setup")]
     public string itemID;
 
+    [Header("Effects")]
+    public GameObject heatsinkSmoke;
+
 
     [Header("Drag Plane")]
     public Transform PlaneQuadTransform;
@@ -146,18 +149,20 @@ public class ZDraggableItem :
         {
             if (currentHoverTarget.expectedItemID == itemID)
             {
-                SnapToTarget(currentHoverTarget.transform);
                 currentHoverTarget.TriggerSuccess();
+
+                if (heatsinkSmoke != null)
+                {
+                    heatsinkSmoke.SetActive(false);
+                }
+
+                gameObject.SetActive(false);
             }
             else
             {
                 currentHoverTarget.TriggerFailure();
                 ResetPosition();
             }
-        }
-        else
-        {
-            ResetPosition();
         }
     }
 
@@ -214,6 +219,5 @@ public class ZDraggableItem :
         }
     }
 }
-
 
 
